@@ -86,6 +86,7 @@ class OpenClawVoiceInteractionSession(context: Context) : VoiceInteractionSessio
     super.onDestroy()
   }
 
+  @Suppress("OVERRIDE_DEPRECATION")
   override fun onHandleAssist(
     data: Bundle?,
     structure: AssistStructure?,
@@ -106,7 +107,7 @@ class OpenClawVoiceInteractionSession(context: Context) : VoiceInteractionSessio
             // Finished speaking — hide the assistant overlay
             scope.launch(Dispatchers.Main) { hide() }
           }
-          @Deprecated("Deprecated in Java")
+          @Suppress("OVERRIDE_DEPRECATION")
           override fun onError(utteranceId: String?) {
             scope.launch(Dispatchers.Main) { hide() }
           }
