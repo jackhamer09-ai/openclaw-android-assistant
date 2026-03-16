@@ -919,10 +919,33 @@ class NodeRuntime(context: Context) {
     chat.sendMessage(message = message, thinkingLevel = thinking, attachments = attachments)
   }
 
+  /** Expose operator session RPC for the VoiceInteractionSession assistant flow. */
+  suspend fun operatorRequest(method: String, paramsJson: String?, timeoutMs: Long = 15_000): String {
+    return operatorSession.request(method, paramsJson, timeoutMs)
+  }
+
+  /** External listeners for gateway chat events (used by VoiceInteractionSession). */
+  private val externalEventListeners = mutableListOf<(String, String?) -> Unit>()
+
+  fun addGatewayEventListener(listener: (String, String?) -> Unit) {
+    synchronized(externalEventListeners) { externalEventListeners.add(listener) }
+  }
+
+  fun removeGatewayEventListener(listener: (String, String?) -> Unit) {
+    synchronized(externalEventListeners) { externalEventListeners.remove(listener) }
+  }
+
   private fun handleGatewayEvent(event: String, payloadJson: String?) {
     micCapture.handleGatewayEvent(event, payloadJson)
     talkMode.handleGatewayEvent(event, payloadJson)
     chat.handleGatewayEvent(event, payloadJson)
+    synchronized(externalEventListeners) {
+      for (listener in externalEventListeners) {
+        try {
+          listener(event, payloadJson)
+        } catch (_: Throwable) {}
+      }
+    }
   }
 
   private fun parseChatSendRunId(response: String): String? {
