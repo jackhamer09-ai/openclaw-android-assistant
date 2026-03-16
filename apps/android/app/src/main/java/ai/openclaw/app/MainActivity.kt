@@ -1,5 +1,6 @@
 package ai.openclaw.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -13,9 +14,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import ai.openclaw.app.ui.RootScreen
 import ai.openclaw.app.ui.OpenClawTheme
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+  companion object {
+    const val EXTRA_TAB = "extra_tab"
+    const val TAB_CHAT = "chat"
+
+    private val _tabNavigation = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val tabNavigation = _tabNavigation.asSharedFlow()
+  }
+
   private val viewModel: MainViewModel by viewModels()
   private lateinit var permissionRequester: PermissionRequester
 
@@ -49,6 +60,18 @@ class MainActivity : ComponentActivity() {
 
     // Keep startup path lean: start foreground service after first frame.
     window.decorView.post { NodeForegroundService.start(this) }
+
+    handleTabIntent(intent)
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    handleTabIntent(intent)
+  }
+
+  private fun handleTabIntent(intent: Intent?) {
+    val tab = intent?.getStringExtra(EXTRA_TAB) ?: return
+    _tabNavigation.tryEmit(tab)
   }
 
   override fun onStart() {

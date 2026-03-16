@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ai.openclaw.app.MainActivity
 import ai.openclaw.app.MainViewModel
 
 private enum class HomeTab(
@@ -68,6 +69,15 @@ private enum class StatusVisual {
 @Composable
 fun PostOnboardingTabs(viewModel: MainViewModel, modifier: Modifier = Modifier) {
   var activeTab by rememberSaveable { mutableStateOf(HomeTab.Connect) }
+
+  // Navigate to a specific tab when requested (e.g. from assistant voice session)
+  LaunchedEffect(Unit) {
+    MainActivity.tabNavigation.collect { tab ->
+      when (tab) {
+        MainActivity.TAB_CHAT -> activeTab = HomeTab.Chat
+      }
+    }
+  }
 
   // Stop TTS when user navigates away from voice tab
   LaunchedEffect(activeTab) {
